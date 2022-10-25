@@ -18,17 +18,19 @@ package edu.yu.parallel;
 
 public interface RWLockInterface {
 
-  /** Acquires the lock iff no other thread currently has acquired the lock in
-   * write mode.  Otherwise, invoking thread is blocked until the writing
-   * thread releases the lock.
+  /** Acquires the lock iff:
+   *   1) No other thread is writing, AND
+   *   2) No other threads have requested write access
+   * Otherwise, the invoking thread is blocked until the writing thread AND
+   * previously blocked threads requesting write access have released the lock
    *
    * NOTE: blocking threads are queued in the order that they requested the lock
    */
   public void lockRead();
 
   /** Acquires the lock iff no other thread currently has acquired the lock in
-   * either read or write mode.  Otherwise, invoking thread is blocked until
-   * all reading threads release the lock.  
+   * either read or write mode.  Otherwise, the invoking thread is blocked until
+   * all previous threads have released the lock.
    *
    * NOTE: blocking threads are queued in the order that they requested the lock
    */
@@ -36,7 +38,7 @@ public interface RWLockInterface {
 
   /** Releases the lock if currently owned by the invoking thread.
    *
-   * @throws IllegalArgumentException if invoking thread doesn't currently own
+   * @throws IllegalMonitorStateException if invoking thread doesn't currently own
    * the lock.
    */
   public void unlock();
