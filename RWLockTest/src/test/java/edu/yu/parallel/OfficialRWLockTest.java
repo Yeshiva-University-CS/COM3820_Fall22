@@ -23,12 +23,12 @@ class OfficialRWLockTest {
     }
 
     private ExecutorService executor;
-    private RWLockInterface rwlock;
+    private RWLockInterface rwLock;
 
     @BeforeEach
     void setUp() {
         executor = Executors.newFixedThreadPool(10);
-        rwlock = new RWLock();
+        rwLock = new RWLock();
     }
 
 
@@ -53,26 +53,26 @@ class OfficialRWLockTest {
         @Test
         @DisplayName("Unlock works when I have the write lock")
         public void unlockWorksWhenIHaveTheWriteLock() throws InterruptedException {
-            rwlock.lockWrite();
-            rwlock.unlock();
+            rwLock.lockWrite();
+            rwLock.unlock();
         }
 
         @Test
         @DisplayName("Can't unlock w/o lock, when no one has the lock")
         public void cantUnlockWhenNobodyHasLock() {
             Assertions.assertThrows(IllegalMonitorStateException.class, () -> {
-                rwlock.unlock();
+                rwLock.unlock();
             });
         }
 
         @Test
         @DisplayName("Can't unlock w/o lock, when another has the write lock")
         public void cantUnlockWhenSomeoneElseHasWriteLock() throws ExecutionException, InterruptedException {
-            rwlock.lockWrite();
+            rwLock.lockWrite();
 
             executor.submit(() -> {
                 Assertions.assertThrows(IllegalMonitorStateException.class, () -> {
-                    rwlock.unlock();
+                    rwLock.unlock();
                 });
                 return null;
             }).get();
@@ -81,11 +81,11 @@ class OfficialRWLockTest {
         @Test
         @DisplayName("Can't unlock w/o lock, when another has the read lock")
         public void cantUnlockWhenSomeoneElseHasReadLock() throws ExecutionException, InterruptedException {
-            rwlock.lockRead();
+            rwLock.lockRead();
 
             executor.submit(() -> {
                 Assertions.assertThrows(IllegalMonitorStateException.class, () -> {
-                    rwlock.unlock();
+                    rwLock.unlock();
                 });
                 return null;
             }).get();
@@ -103,7 +103,7 @@ class OfficialRWLockTest {
         @Test
         @DisplayName("WWW - Write blocks subsequent writes from getting the lock")
         public void writeLockBlocksWriteRequests() throws InterruptedException {
-            var group = new ExecutionGroup(rwlock, STD_WAIT_TIME);
+            var group = new ExecutionGroup(rwLock, STD_WAIT_TIME);
 
             executor.submit(group.createWriterTask());
             executor.submit(group.createWriterTask());
@@ -136,7 +136,7 @@ class OfficialRWLockTest {
         @Test
         @DisplayName("WRR - Write blocks subsequent reads")
         public void writeBlocksReadRequests() throws InterruptedException, ExecutionException {
-            var group = new ExecutionGroup(rwlock, STD_WAIT_TIME);
+            var group = new ExecutionGroup(rwLock, STD_WAIT_TIME);
 
             executor.submit(group.createWriterTask());
             executor.submit(group.createReaderTask());
@@ -163,7 +163,7 @@ class OfficialRWLockTest {
         @Test
         @DisplayName("WRW - Pending write request obtains the lock after previous pending read request")
         public void writeReadWrite() throws InterruptedException {
-            var group = new ExecutionGroup(rwlock, STD_WAIT_TIME);
+            var group = new ExecutionGroup(rwLock, STD_WAIT_TIME);
 
             executor.submit(group.createWriterTask());
             executor.submit(group.createReaderTask());
@@ -191,7 +191,7 @@ class OfficialRWLockTest {
         @Test
         @DisplayName("WRWR - Pending read is queued after the last pending write")
         public void writeReadWriteRead() throws InterruptedException {
-            var group = new ExecutionGroup(rwlock, STD_WAIT_TIME);
+            var group = new ExecutionGroup(rwLock, STD_WAIT_TIME);
 
             executor.submit(group.createWriterTask());
             executor.submit(group.createReaderTask());
@@ -227,7 +227,7 @@ class OfficialRWLockTest {
         @Test
         @DisplayName("RW - Read lock blocks write from getting lock")
         public void readLockBlocksWriteRequest() throws InterruptedException {
-            var group = new ExecutionGroup(rwlock, STD_WAIT_TIME);
+            var group = new ExecutionGroup(rwLock, STD_WAIT_TIME);
 
             executor.submit(group.createReaderTask());
             executor.submit(group.createWriterTask());
@@ -251,7 +251,7 @@ class OfficialRWLockTest {
         @Test
         @DisplayName("RRR - Multiple threads can read concurrently")
         public void multipleThreadsCanReadConcurrently() throws InterruptedException {
-            var group = new ExecutionGroup(rwlock, STD_WAIT_TIME);
+            var group = new ExecutionGroup(rwLock, STD_WAIT_TIME);
 
             executor.submit(group.createReaderTask());
             executor.submit(group.createReaderTask());
@@ -278,9 +278,9 @@ class OfficialRWLockTest {
          * AND that the queued writer thread is woken up automatically after the read locks are released
          */
         @Test
-        @DisplayName("RRW - write can obtain lock only after all readers complete")
+        @DisplayName("RRW - Write can obtain lock only after all readers complete")
         public void lockForWriteOnlyAfterAllReadersComplete() throws InterruptedException {
-            var group = new ExecutionGroup(rwlock, STD_WAIT_TIME);
+            var group = new ExecutionGroup(rwLock, STD_WAIT_TIME);
 
             executor.submit(group.createReaderTask());
             executor.submit(group.createReaderTask());
@@ -313,7 +313,7 @@ class OfficialRWLockTest {
         @Test
         @DisplayName("RWR - Pending write blocks a read")
         public void pendingWriteBlocksRead() throws InterruptedException {
-            var group = new ExecutionGroup(rwlock, STD_WAIT_TIME);
+            var group = new ExecutionGroup(rwLock, STD_WAIT_TIME);
 
             executor.submit(group.createReaderTask());
             executor.submit(group.createWriterTask());
