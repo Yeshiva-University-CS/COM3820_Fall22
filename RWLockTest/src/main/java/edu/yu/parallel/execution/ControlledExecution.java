@@ -12,6 +12,7 @@ abstract public class ControlledExecution<T> implements Callable<T> {
     private final ExecutionController controller;
     private final Callable<T> callable;
     private volatile LockStatus lockStatus = LockStatus.NONE;
+
     protected ControlledExecution(String id, int sequenceNum, ExecutionController controller, Callable<T> callable) {
         this.id = id;
         this.sequenceNum = sequenceNum;
@@ -39,6 +40,7 @@ abstract public class ControlledExecution<T> implements Callable<T> {
         // Task is in LockStatus.NONE
         // Wait for all threads to have reached the starting line of the race
         logProgress("Thread is started");
+        waitSomeTime();
         controller.awaitForAllThreadsToHaveStarted();
 
         lockStatus = LockStatus.READY;
@@ -93,6 +95,14 @@ abstract public class ControlledExecution<T> implements Callable<T> {
 
     private void logProgress(String msg) {
         logger.info("{}:{}, {}", id, lockStatus, msg);
+    }
+
+    private void waitSomeTime() {
+        try {
+            Thread.sleep(500 - (100L * sequenceNum));
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public enum LockStatus {
