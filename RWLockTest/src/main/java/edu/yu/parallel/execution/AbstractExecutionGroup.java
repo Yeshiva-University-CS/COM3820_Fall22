@@ -5,7 +5,6 @@ import edu.yu.parallel.RWLockInterface;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Phaser;
 
 /**
  * This class is **NOT** thread safe. It must only be used from a single thread.
@@ -16,7 +15,6 @@ abstract class AbstractExecutionGroup<T> {
 
     private final RWLockInterface rwLock;
     private final long defaultWaitTime;
-    private final Phaser entryPhaser = new Phaser(1); // set to 1 to let this class have control
     private final ArrayList<ControlledExecution> executionTasks = new ArrayList<>();
 
     protected AbstractExecutionGroup(RWLockInterface rwLock, long defaultWaitTime) {
