@@ -2,7 +2,6 @@ package edu.yu.parallel.execution;
 
 import edu.yu.parallel.RWLockInterface;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
@@ -28,7 +27,7 @@ abstract class AbstractExecutionGroup<T> {
 
     public Callable<T> createReaderTask(Callable<T> callable) {
         if (threadsAreReadyToLock())
-            throw new IllegalComponentStateException("Cannot create more tasks after awaitAllThreadsStarted is called");
+            throw new IllegalStateException("Cannot create more tasks after awaitAllThreadsStarted is called");
         var controller = this.newExecutionController();
         var task = new Reader<T>(executionTasks.size(), controller, callable);
         executionTasks.add(task);
@@ -43,7 +42,7 @@ abstract class AbstractExecutionGroup<T> {
 
     public Callable<T> createWriterTask(Callable<T> callable) {
         if (threadsAreReadyToLock())
-            throw new IllegalComponentStateException("Cannot create more tasks after awaitAllThreadsStarted is called");
+            throw new IllegalStateException("Cannot create more tasks after awaitAllThreadsStarted is called");
         var controller = this.newExecutionController();
         var task = new Writer<T>(executionTasks.size(), controller, callable);
         executionTasks.add(task);
@@ -62,7 +61,7 @@ abstract class AbstractExecutionGroup<T> {
 
     public void lockInOrder(long sleepWaitTime) {
         if (!threadsAreReadyToLock())
-            throw new IllegalComponentStateException("awaitAllThreadsStarted must be called first");
+            throw new IllegalStateException("awaitAllThreadsStarted must be called first");
 
         for (int i = 0; i < executionTasks.size(); ++i) {
             executionTasks.get(i).permitLocking();

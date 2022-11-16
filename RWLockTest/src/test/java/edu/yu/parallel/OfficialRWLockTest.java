@@ -27,7 +27,7 @@ class OfficialRWLockTest {
 
     @BeforeEach
     void setUp() {
-        executor = Executors.newFixedThreadPool(10);
+        executor = Executors.newFixedThreadPool(15);
         rwLock = new RWLock();
     }
 
@@ -67,28 +67,32 @@ class OfficialRWLockTest {
 
         @Test
         @DisplayName("Can't unlock w/o lock, when another has the write lock")
-        public void cantUnlockWhenSomeoneElseHasWriteLock() throws ExecutionException, InterruptedException {
-            rwLock.lockWrite();
+        public void cantUnlockWhenSomeoneElseHasWriteLock() {
+            var group = new ExecutionGroup(rwLock, STD_WAIT_TIME);
 
-            executor.submit(() -> {
-                Assertions.assertThrows(IllegalMonitorStateException.class, () -> {
-                    rwLock.unlock();
-                });
-                return null;
-            }).get();
+            executor.submit(group.createWriterTask());
+            group.awaitReadyToLock();
+            group.lockInOrder();
+            assertEquals(ControlledExecution.LockStatus.LOCKED, group.getLockStatus(0));
+
+            Assertions.assertThrows(IllegalMonitorStateException.class, () -> {
+                rwLock.unlock();
+            });
         }
 
         @Test
         @DisplayName("Can't unlock w/o lock, when another has the read lock")
         public void cantUnlockWhenSomeoneElseHasReadLock() throws ExecutionException, InterruptedException {
-            rwLock.lockRead();
+            var group = new ExecutionGroup(rwLock, STD_WAIT_TIME);
 
-            executor.submit(() -> {
-                Assertions.assertThrows(IllegalMonitorStateException.class, () -> {
-                    rwLock.unlock();
-                });
-                return null;
-            }).get();
+            executor.submit(group.createReaderTask());
+            group.awaitReadyToLock();
+            group.lockInOrder();
+            assertEquals(ControlledExecution.LockStatus.LOCKED, group.getLockStatus(0));
+
+            Assertions.assertThrows(IllegalMonitorStateException.class, () -> {
+                rwLock.unlock();
+            });
         }
 
     }
@@ -134,8 +138,32 @@ class OfficialRWLockTest {
          * AND that queued readers threads are *all* woken up after the write lock is released
          */
         @Test
+        @DisplayName("WRRRRRRRRR - Write blocks many subsequent reads")
+        public void writeBlocksManyReadRequests() throws InterruptedException {
+            var group = new ExecutionGroup(rwLock, STD_WAIT_TIME);
+
+            int reads = 9;
+
+            executor.submit(group.createWriterTask());
+            for (int i = 0; i < reads; i++)
+                executor.submit(group.createReaderTask());
+
+            group.awaitReadyToLock();
+            group.lockInOrder();
+            group.completeExecution(0);
+
+            assertEquals(ControlledExecution.LockStatus.UNLOCKED, group.getLockStatus(0));
+            for (int i = 0; i < reads; i++)
+                assertEquals(ControlledExecution.LockStatus.LOCKED, group.getLockStatus(i + 1));
+        }
+
+        /**
+         * Verifies that write lock blocks subsequent reads,
+         * AND that queued readers threads are *all* woken up after the write lock is released
+         */
+        @Test
         @DisplayName("WRR - Write blocks subsequent reads")
-        public void writeBlocksReadRequests() throws InterruptedException, ExecutionException {
+        public void manyBlockedReadRequests() throws InterruptedException, ExecutionException {
             var group = new ExecutionGroup(rwLock, STD_WAIT_TIME);
 
             executor.submit(group.createWriterTask());
@@ -325,7 +353,7 @@ class OfficialRWLockTest {
             // Verify the second read is not given the lock along with the current read
             assertEquals(ControlledExecution.LockStatus.LOCKED, group.getLockStatus(0));
             assertEquals(ControlledExecution.LockStatus.WAITING, group.getLockStatus(1));
-            assertEquals(ControlledExecution.LockStatus.WAITING, group.getLockStatus(1));
+            assertEquals(ControlledExecution.LockStatus.WAITING, group.getLockStatus(2));
         }
     }
 }

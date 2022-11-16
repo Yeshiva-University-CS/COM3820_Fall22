@@ -99,7 +99,7 @@ abstract public class ControlledExecution<T> implements Callable<T> {
 
     private void waitSomeTime() {
         try {
-            Thread.sleep(500 - (100L * sequenceNum));
+            Thread.sleep(Math.max(500 - (50 * sequenceNum), 0));
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
