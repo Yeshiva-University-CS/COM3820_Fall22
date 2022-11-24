@@ -2,4 +2,6 @@
 *.class
 .idea
 RWLock/target/*
+RWLockTest/target/*
+FolderTotals/target/*
 *.iml
