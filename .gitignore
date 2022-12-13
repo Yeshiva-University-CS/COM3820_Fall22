@@ -1,7 +1,6 @@
 
 *.class
-.idea
-RWLock/target/*
-RWLockTest/target/*
-FolderTotals/target/*
 *.iml
+**/.idea
+**/target
+MarketData/src/main/resources/data
