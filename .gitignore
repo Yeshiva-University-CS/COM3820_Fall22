@@ -4,3 +4,5 @@
 **/.idea
 **/target
 MarketData/src/main/resources/data
+MarketData/CloseAboveMid.csv
+MarketData/NASDAQ_100.csv

@@ -12,7 +12,7 @@ import java.time.Instant;
 
 
 public class App {
-    private final static Logger logger = LogManager.getLogger(App.class);
+    final static Logger logger = LogManager.getLogger(App.class);
 
     static {
         Configurator.setLevel("edu.yu.parallel", Level.INFO);
